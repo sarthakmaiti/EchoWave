@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>EchoWave</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --bg-color: #f8f9fa;
+      --text-color: #202124;
+      --header-color: #4285F4;
+      --card-bg: #fff;
+      --input-border: #dadce0;
+      --placeholder-color: #5f6368;
+      --log-bg: #f1f3f4;
+      --footer-color: #5f6368;
+      --button-bg: #4285F4;
+      --button-hover-bg: #3367d6;
+      --shadow-color: rgba(0, 0, 0, 0.1);
+      --shadow-hover: rgba(0, 0, 0, 0.2);
+      --help-active-bg: rgba(66, 133, 244, 0.1);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-color: #202124;
+        --text-color: #e8eaed;
+        --header-color: #8ab4f8;
+        --card-bg: #2c2c2e;
+        --input-border: #5f6368;
+        --placeholder-color: #9aa0a6;
+        --log-bg: #292a2d;
+        --footer-color: #9aa0a6;
+        --button-bg: #8ab4f8;
+        --button-hover-bg: #669df6;
+        --shadow-color: rgba(0, 0, 0, 0.5);
+        --shadow-hover: rgba(0, 0, 0, 0.7);
+        --help-active-bg: rgba(138, 180, 248, 0.1);
+      }
+    }
+
+    * {
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    body {
+      font-family: 'Roboto', sans-serif;
+      background: var(--bg-color);
+      color: var(--text-color);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    h2 {
+      font-weight: 700;
+      font-size: 2.5rem;
+      margin-bottom: 2rem;
+      color: var(--header-color);
+    }
+
+    #auth,
+    #app,
+    #instructions {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 2rem;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 1px 3px var(--shadow-color), 0 1px 2px var(--shadow-color);
+      margin-bottom: 1rem;
+    }
+
+    input {
+      background: var(--card-bg);
+      border: 1px solid var(--input-border);
+      color: var(--text-color);
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin-bottom: 1rem;
+      width: 100%;
+      font-size: 16px;
+    }
+
+    input::placeholder {
+      color: var(--placeholder-color);
+    }
+
+    button {
+      background: var(--button-bg);
+      border: none;
+      color: #fff;
+      font-weight: 500;
+      padding: 12px 24px;
+      border-radius: 8px;
+      margin: 8px 0;
+      transition: all 0.15s ease;
+      font-size: 16px;
+      min-height: 48px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    button:hover {
+      background: var(--button-hover-bg);
+      box-shadow: 0 2px 6px var(--shadow-hover);
+    }
+
+    button:active {
+      transform: scale(0.98);
+      box-shadow: 0 1px 3px var(--shadow-hover);
+    }
+
+    #log {
+      background: var(--log-bg);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-top: 2rem;
+      max-height: 200px;
+      overflow-y: auto;
+      width: 100%;
+      max-width: 400px;
+      font-size: 0.875rem;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      color: var(--text-color);
+    }
+
+    #app h3,
+    #auth h3,
+    #instructions h3 {
+      margin-bottom: 1.5rem;
+      color: var(--text-color);
+    }
+
+    audio {
+      width: 100%;
+      margin-top: 1rem;
+    }
+
+    #footer {
+      margin-top: auto;
+      padding: 1rem;
+      font-size: 0.875rem;
+      color: var(--footer-color);
+      text-align: center;
+    }
+
+    #help-button {
+      background: transparent;
+      border: none;
+      color: var(--header-color);
+      font-size: 16px;
+      cursor: pointer;
+      padding: 8px 12px;
+      border-radius: 8px;
+      min-height: 48px;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    #help-button:active {
+      background: var(--help-active-bg);
+    }
+
+    /* Ripple effect */
+    button::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.3);
+      transform: translate(-50%, -50%);
+      opacity: 0;
+      transition: width 0.6s ease, height 0.6s ease, opacity 0.6s ease;
+      pointer-events: none;
+    }
+
+    button:active::before {
+      width: 300px;
+      height: 300px;
+      opacity: 1;
+    }
+
+    /* Responsive mobile enhancements */
+    @media (max-width: 576px) {
+      body {
+        padding: 12px;
+      }
+
+      h2 {
+        font-size: 2rem;
+      }
+
+      #auth,
+      #app,
+      #instructions {
+        padding: 1.75rem;
+        max-width: 100%;
+        border-radius: 16px;
+      }
+
+      button {
+        width: 100%;
+        margin: 10px 0;
+        padding: 16px;
+        font-size: 17px;
+        min-height: 56px;
+      }
+
+      input {
+        padding: 16px;
+        font-size: 17px;
+      }
+
+      #log {
+        max-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <h2>EchoWave</h2>
+
+  <div id="auth">
+    <h3>Register / Login</h3>
+
+    <input id="username" placeholder="Username" /><br />
+    <input id="password" type="password" placeholder="Password" /><br />
+
+    <button onclick="register()">Register</button>
+    <button onclick="login()">Login</button>
+  </div>
+
+  <div id="app" style="display:none;">
+    <h3>Welcome <span id="currentUser"></span></h3>
+
+    <input id="channelId" value="room1" placeholder="Channel ID" /><br />
+
+    <button onclick="connect()">Connect</button>
+
+    <button onclick="requestSpeaker()">Request Speaker</button>
+    <button onclick="releaseSpeaker()">Release Speaker</button>
+    <button onclick="logout()">Logout</button>
+
+  </div>
+
+  <pre id="log"></pre>
+
+  <div id="instructions" style="display: none;">
+    <h3>How to Use EchoWave</h3>
+    <ul>
+      <li><strong>Register/Login:</strong> Create an account or log in with your username and password.</li>
+      <li><strong>Join a Channel:</strong> Enter a Channel ID (e.g., "room1") and click "Connect" to join the voice
+        room.</li>
+      <li><strong>Become Speaker:</strong> Click "Request Speaker" to take the mic and broadcast your audio to others in
+        the channel.</li>
+      <li><strong>Release Mic:</strong> When done speaking, click "Release Speaker" to let others take over.</li>
+      <li><strong>Logout:</strong> Click "Logout" to end your session.</li>
+      <li><strong>Tips:</strong> Ensure your microphone is enabled. Audio will play automatically from the speaker.</li>
+    </ul>
+  </div>
+
+  <div id="footer">
+    Made with ❤️ by Sarthak
+  </div>
+
+  <script>
+    function toggleInstructions() {
+      const instr = document.getElementById('instructions');
+      instr.style.display = instr.style.display === 'none' ? 'block' : 'none';
+    }
+  </script>
+
+  <button id="help-button" onclick="toggleInstructions()">Help?</button>
+
+  <script src="app.js"></script>
+</body>
+</html>

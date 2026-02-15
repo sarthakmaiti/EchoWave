@@ -1,0 +1,36 @@
+# Java / Spring Boot
+target/
+*.log
+.idea/
+*.iml
+.mvn/
+mvnw
+mvnw.cmd
+
+# Node / React / Frontend
+node_modules/
+.DS_Store
+dist/
+build/
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# General
+*.class
+*.jar
+*.war
+*.ear
+.vscode/
+
+# Spring Boot / Java sensitive files
+application.properties
+application.yml
+application-*.properties
+application-*.yml
+src/main/resources/application.properties
+src/main/resources/application.yml
+
+# Also ignore any .env files if you use them later
+.env
